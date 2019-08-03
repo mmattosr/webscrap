@@ -14,9 +14,12 @@
     "@babel/core": "^7.5.5",
     "@babel/node": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
-    "nodemon": "^1.19.1"
+    "nodemon": "^1.19.1",
+    "standard": "^13.1.0"
   },
   "dependencies": {
-    "dotenv": "^8.0.0"
+    "dotenv": "^8.0.0",
+    "node-horseman": "^3.3.0",
+    "phantom": "^6.2.0"
   }
 }
