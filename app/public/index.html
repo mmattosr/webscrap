@@ -1,0 +1,44 @@
+<html>
+
+<head></head>
+
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+  <div id="app">
+    <form>
+      <label for='username'>Usuário</label>
+      <input id='username' :value='username'>
+
+      <label for='password'>Senha</label>
+      <input id='password' type='password' :value='password'>
+
+      <button type='submit'>Entrar</button>
+    </form>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        username: '',
+        password: '',
+        instance: undefined
+      },
+      mounted: function () {
+        if (!this.instance) {
+          this.createInstance()
+        }
+      },
+      methods: {
+        createInstance: function () {
+          fetch('/instance', { method: 'POST' })
+            .then(console.log)
+            .catch(console.log)
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>

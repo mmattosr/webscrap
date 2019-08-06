@@ -1,10 +1,9 @@
 import puppeteer from 'puppeteer'
-import randomUUID from 'uuid/v4'
 
 const instances = {}
 
 export async function createInstance(id) {
-  const browser = await puppeteer.launch({ headless: true })
+  const browser = await puppeteer.launch({ headless: true, executablePath: 'chrome.exe' })
   instances[id] = browser
   console.log('Created instance', id)
   return browser
