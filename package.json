@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon --exec babel-node app/server.js",
-    "build": "docker build -t marcelo.mattos/webscrap .",
-    "run": "docker run -p 8080:8080 marcelo.mattos/webscrap"
+    "start": "babel-node app/server.js",
+    "dev": "nodemon --exec npm start",
+    "docker:build": "docker build -t marcelo.mattos/webscrap .",
+    "docker:run": "docker run -it -p 8080:8080 marcelo.mattos/webscrap"
   },
   "author": "",
   "license": "ISC",
