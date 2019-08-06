@@ -1,4 +1,4 @@
-# Puppeteer inside docker container template, see https://paul.kinlan.me/hosting-puppeteer-in-a-docker-container/
+# Puppeteer inside docker container template, see https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-puppeteer-in-docker
 FROM node:10-slim
 LABEL name "puppeteer"
 

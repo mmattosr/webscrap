@@ -6,7 +6,8 @@
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
   <div id="app">
-    <form>
+    <p>Instance: {{instance}}</p>
+    <form @submit="login">
       <label for='username'>Usuário</label>
       <input id='username' :value='username'>
 
@@ -15,26 +16,47 @@
 
       <button type='submit'>Entrar</button>
     </form>
+    <button type='buton' v-if='instance' @click='exit'>Fechar</button>
   </div>
 
   <script>
     new Vue({
       el: '#app',
       data: {
-        username: '',
-        password: '',
+        username: 'marcelo.mattos',
+        password: 'fake-secret',
         instance: undefined
       },
       mounted: function () {
         if (!this.instance) {
-          this.createInstance()
+          this.init()
         }
       },
       methods: {
-        createInstance: function () {
-          fetch('/instance', { method: 'POST' })
-            .then(console.log)
-            .catch(console.log)
+        async init() {
+          const { id } = await fetch('/nubank', { method: 'POST' }).then(r => r.json())
+          // TODO: persist this on local storage
+          this.instance = id
+        },
+
+        async login(e) {
+          e.preventDefault()
+          const options = {
+            method: 'POST',
+            body: JSON.stringify({
+              username: this.username,
+              password: this.password
+            }),
+            headers: {
+              'Content-type': 'application/json'
+            }
+          }
+          const result = await fetch(`/nubank/${this.instance}/login`, options).then(r => r.json())
+          console.log(result)
+        },
+
+        async exit(e) {
+          const result = await fetch(`/nubank/${this.instance}/exit`, { method: 'POST' }).then(r => r.json())
         }
       }
     })
