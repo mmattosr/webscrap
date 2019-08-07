@@ -6,8 +6,8 @@
   "scripts": {
     "start": "babel-node app/server.js",
     "dev": "nodemon --exec npm start",
-    "docker:build": "docker build -t marcelo.mattos/webscrap .",
-    "docker:run": "docker run -it -p 8080:8080 marcelo.mattos/webscrap"
+    "docker:build": "docker build -t webscrap .",
+    "docker:run": "docker run -it -p 8080:8080 webscrap"
   },
   "author": "",
   "license": "ISC",
