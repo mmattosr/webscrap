@@ -2,19 +2,20 @@ import * as path from 'path'
 import * as os from 'os'
 import uuid from 'uuid/v4'
 import puppeteer from 'puppeteer'
+import scrapBillsPage from './scrappers/scrapBillsPage'
+import scrapTransactionsPage from './scrappers/scrapTransactionsPage'
+import scrapProfilePage from './scrappers/scrapProfilePage'
 
+// hold scrapper instances
 export const instances = {}
 
-export default class NubankScraper {
+export default class NubankScrapper {
+  id = undefined
+  browser = undefined
+  page = undefined
   data = undefined
   initialized = false
   finished = false
-  /** Puppeteer's instance id */
-  id = undefined
-  /** Puppeteer's browser instance */
-  browser = undefined
-  /** Puppeteer's page instance */
-  page = undefined
 
   constructor(id) {
     // create instance
@@ -216,6 +217,9 @@ export default class NubankScraper {
     return this.waitFor(condition, name || selector, times)
   }
 
+  /**
+   * Log out from nubank and close browser.
+   */
   async exit() {
     console.log(`[${this.id}] Exiting`)
 
@@ -225,11 +229,11 @@ export default class NubankScraper {
     await this.page.waitFor(2000)
     await this.printscreen('exited')
 
-    // // close browser instance
-    // await this.browser.close()
+    // close browser instance
+    await this.browser.close()
 
-    // // remove instance reference
-    // instances[this.id] = undefined
+    // remove instance reference
+    instances[this.id] = undefined
 
     console.log(`[${this.id}] Exited`)
   }
@@ -238,94 +242,5 @@ export default class NubankScraper {
     const imgPath = path.resolve(os.tmpdir(), `${sufix}-${Date.now()}.png`)
     await this.page.screenshot({ path: imgPath })
     console.log(`[${this.id}] Screenshot taken ${imgPath}`)
-  }
-}
-
-// scrapers
-const scrapBillsPage = () => {
-  const bills = [...document.querySelectorAll('.md-tab-content')].map(bill => {
-    const [start, end] = bill.querySelectorAll('.charges .period span')
-    const amount = bill.querySelector('.summary .amount')
-    const due = bill.querySelector('.summary .due .date')
-    const detail = bill.querySelector('.summary .detail')
-    const charges = [...bill.querySelectorAll('.charges .charge')].map(charge => {
-      const time = charge.querySelector('.time')
-      const description = charge.querySelector('.description')
-      const amount = charge.querySelector('.amount')
-      return {
-        time: time ? time.innerText : undefined,
-        description: description ? description.innerText : undefined,
-        amount: amount ? amount.innerText : undefined
-      }
-    })
-    return {
-      period: {
-        start: start ? start.innerText : undefined,
-        end: end ? end.innerText : undefined
-      },
-      amount: amount ? amount.innerText : undefined,
-      due: due ? due.innerText : undefined,
-      detail: detail ? detail.innerText : undefined,
-      charges
-    }
-  })
-  return bills
-}
-const scrapTransactionsPage = () => {
-  // scrap available limit data
-  let availableLimit = document.querySelector('.available .amount')
-  availableLimit = availableLimit ? availableLimit.innerText : undefined
-
-  // scrap feed data
-  const feed = [...document.querySelectorAll('.transaction')].map(item => {
-    const type = item.querySelector('.type')
-    const title = item.querySelector('.title')
-    const description = item.querySelector('.description')
-    const amount = item.querySelector('.amount')
-    const tags = item.querySelector('.tags')
-    const time = item.querySelector('.time')
-    return {
-      type: type && type.innerText,
-      title: title && title.innerText,
-      description: description && description.innerText,
-      amount: amount && amount.innerText,
-      tags: tags && tags.innerText,
-      time: time && time.innerText
-    }
-  })
-
-  // scrap last transaction data
-  let lastTransaction = document.querySelector('.last-transaction')
-  if (lastTransaction) {
-    let time = lastTransaction.querySelector('.time')
-    time = time ? time.innerText : undefined
-    let merchant = lastTransaction.querySelector('.merchant')
-    merchant = merchant ? merchant.innerText : undefined
-    let amount = lastTransaction.querySelector('.amount')
-    amount = amount ? amount.innerText : undefined
-    lastTransaction = {
-      time,
-      merchant,
-      amount
-    }
-  }
-
-  return {
-    limitAvailable: availableLimit,
-    lastTransaction,
-    feed
-  }
-}
-const scrapProfilePage = () => {
-  const email = document.querySelector('#email')
-  email = email ? email.value : undefined
-  const phone = document.querySelector('#phone')
-  phone = phone ? phone.value : undefined
-  const totalLimit = document.querySelector('.card-summary .value')
-  totalLimit = totalLimit ? totalLimit.innerText : undefined
-  return {
-    email,
-    phone,
-    totalLimit
   }
 }
