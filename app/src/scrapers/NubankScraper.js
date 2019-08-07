@@ -34,101 +34,115 @@ export default class NubankScraper {
     }
   }
 
+  /**
+   * Init puppeteer's browser and page instances
+   */
   async init() {
     // launch browser and page instances
     console.log(`[${this.id}] Initializing instance`)
     this.browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] })
     this.page = await this.browser.newPage()
-
-    // this.page.on('close', x => console.log('close', x))
-    // this.page.on('console', x => console.log('console', x))
-    // this.page.on('dialog', x => console.log('dialog', x))
-    // this.page.on('domcontentloaded', x => console.log('domcontentloaded', x))
-    // this.page.on('error', x => console.log('error', x))
-    // this.page.on('frameattached', x => console.log('frameattached', x))
-    // this.page.on('framedetached', x => console.log('framedetached', x))
-    // this.page.on('framenavigated', x => console.log('framenavigated', x))
-    // this.page.on('load', x => console.log('load', x))
-    // this.page.on('metrics', x => console.log('metrics', x))
-    // this.page.on('pageerror', x => console.log('pageerror', x))
-    // this.page.on('popup', x => console.log('popup', x))
-    // this.page.on('request', x => console.log('request', x))
-    // this.page.on('requestfailed', x => console.log('requestfailed', x))
-    // this.page.on('requestfinished', x => console.log('requestfinished', x))
-    // this.page.on('response', x => console.log('response', x))
-    // this.page.on('workercreated', x => console.log('workercreated', x))
-    // this.page.on('workerdestroyed', x => console.log('workerdestroyed', x))
-
-    // navigate to nubank
-    await this.page.goto('https://app.nubank.com.br/#/login')
-    await this.page.waitFor(2000)
     this.initialized = true
     console.log(`[${this.id}] Initialized instance`)
   }
 
+  /**
+   * Do login. If a qrcode is found then return it source, else throw a error.
+   * 
+   * @param username 
+   * @param password 
+   */
   async login(username, password) {
-    console.log(`[${this.id}] Loging in`)
-    // insert form data
-    await this.page.type('#username', username)
-    await this.page.type('input[type="password"]', password)
-    // submit form
-    await this.page.click('button[type="submit"]')
-    await this.printscreen('typed')
-    // wait for qr code load
-    if (await this.waitFor(this.page.$('.qr-code img'), 'qrcode')) {
+    try {
+      console.log(`[${this.id}] Going to login page`)
+
+      // navigate to nubank
+      await this.page.goto('https://app.nubank.com.br/#/login')
+      await this.waitForLocation('login')
+
+      console.log(`[${this.id}] Loging in`)
+
+      // insert form data
+      await this.page.type('#username', username)
+      await this.page.type('input[type="password"]', password)
+
+      // submit form
+      await this.page.click('button[type="submit"]')
+      await this.printscreen('typed')
+
+      // wait for qrcode load
+      await this.waitForSelector('.qr-code img')
+
       console.log(`[${this.id}] Loged in`)
+
       // get qr code data
       const qrcode = await this.page.evaluate(() => { return document.querySelector('.qr-code img').src })
+
       // fires a async process to scrap nubank's app
       this.startScraping()
-      // returns qr code
+
       console.log(`[${this.id}] Returning qr code`)
+
+      // returns qr code
       return qrcode
-    } else {
-      // TODO: handle error message from page before return
-      console.log(`[${this.id}] Can't log in`)
-      throw new Error(`Can't log in`)
+    } catch (error) {
+      if (error.message.includes(this.id)) {
+        console.log(error.message)
+      }
+      throw error
     }
   }
 
+  /**
+   * Await until user scan qr code, then start scrap process.
+   * At the end set finished flag to true.
+   */
   async startScraping() {
-    console.log(`[${this.id}] Starting data scrap`)
-    // wait for authentication
-    const authenticated = await this.waitFor(this.page.evaluate(() => { return window.location.href.includes('transactions') }), 'auth')
-    // exit if auth failed
-    if (!authenticated) {
-      return await this.exit()
+    try {
+      console.log(`[${this.id}] Starting data scrap`)
+
+      // wait for transactions page
+      // ps: await a lot because user needs to scans qr code
+      const authenticated = await this.waitForLocation('transactions', 'transactions', 6)
+
+      // exit if auth failed
+      if (!authenticated) return await this.exit()
+
+      console.log(`[${this.id}] Authenticated`)
+
+      // scrap transactions data
+      await this.printscreen('transactions')
+      const transactions = await this.page.evaluate(scrapTransactionsPage)
+
+      // go to bills page and scrap it
+      await this.page.goto('https://app.nubank.com.br/#/bills')
+      await this.waitForLocation('bills')
+      await this.printscreen('bills')
+      const bills = await this.page.evaluate(scrapBillsPage)
+
+      // go to profile page and scrap it
+      await this.page.goto('https://app.nubank.com.br/#/profile')
+      await this.waitForLocation('profile')
+      await this.printscreen('profile')
+      const profile = await this.page.evaluate(scrapProfilePage)
+
+      // set instance data
+      this.finished = true
+      this.data = {
+        transactions,
+        bills,
+        profile
+      }
+    } catch (error) {
+      if (error.message.includes(this.id)) {
+        console.log(error.message)
+      }
     }
-    this.printscreen('transactions')
-    console.log(`[${this.id}] Authenticated`)
-    // scrap transactions data
-    const transactions = await this.page.evaluate(scrapTransactionsPage)
-    // go to bills page
-    await this.page.goto('https://app.nubank.com.br/#/bills')
-    await this.page.waitFor(2000)
-    this.printscreen('bills')
-    // scrap bills data
-    const bills = await this.page.evaluate(scrapBillsPage)
-    // go to profile page
-    await this.page.goto('https://app.nubank.com.br/#/profile')
-    await this.page.waitFor(2000)
-    this.printscreen('profile')
-    // scrap profile data
-    const profile = await this.page.evaluate(scrapProfilePage)
-
-    this.finished = true
-    this.data = {
-      transactions,
-      bills,
-      profile
-    }
-
-
-    // TODO: persist data
-    // exit
-    // await this.exit()
   }
 
+  /**
+   * Returns scraped data if process is finished
+   */
   getData() {
     if (this.finished) {
       return this.data
@@ -172,17 +186,39 @@ export default class NubankScraper {
     }
     try {
       await loop()
-      return true
     } catch (e) {
-      this.printscreen('cantlogin')
-      console.log(`[${this.id}] Timed out waiting for ${name} `)
-      return false
+      await this.printscreen(`timeout-${name}`)
+      throw new Error(`[${this.id}] Timed out waiting for ${name}`)
     }
   }
 
+  /**
+   * Wait for window.location.href to includes param location.
+   * 
+   * @param location 
+   * @param name 
+   * @param times 
+   */
+  waitForLocation(location, name, times) {
+    const condition = this.page.evaluate(() => { return window.location.href.includes(location) })
+    return this.waitFor(condition, name || location, times)
+  }
+
+  /**
+   * Wait for selector.
+   * 
+   * @param selector 
+   * @param name 
+   * @param times 
+   */
+  waitForSelector(selector, name, times) {
+    const condition = this.page.$(selector)
+    return this.waitFor(condition, name || selector, times)
+  }
+
   async exit() {
-    this.prepare()
     console.log(`[${this.id}] Exiting`)
+
     // logout from nubank
     await this.printscreen('exiting')
     await this.page.evaluate(() => { document.querySelector('a.logout').click() })
@@ -191,6 +227,7 @@ export default class NubankScraper {
 
     // // close browser instance
     // await this.browser.close()
+
     // // remove instance reference
     // instances[this.id] = undefined
 
@@ -206,8 +243,6 @@ export default class NubankScraper {
 
 // scrapers
 const scrapBillsPage = () => {
-  // https://app.nubank.com.br/#/bills
-
   const bills = [...document.querySelectorAll('.md-tab-content')].map(bill => {
     const [start, end] = bill.querySelectorAll('.charges .period span')
     const amount = bill.querySelector('.summary .amount')
@@ -282,11 +317,15 @@ const scrapTransactionsPage = () => {
   }
 }
 const scrapProfilePage = () => {
-  // https://app.nubank.com.br/#/profile
   const email = document.querySelector('#email')
   email = email ? email.value : undefined
   const phone = document.querySelector('#phone')
   phone = phone ? phone.value : undefined
   const totalLimit = document.querySelector('.card-summary .value')
   totalLimit = totalLimit ? totalLimit.innerText : undefined
+  return {
+    email,
+    phone,
+    totalLimit
+  }
 }
