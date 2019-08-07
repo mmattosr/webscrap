@@ -6,74 +6,97 @@
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 
   <div id="app">
-    <p>Instance: {{instance}}</p>
+    <p>Mensagem: {{message}}</p>
+
     <form @submit="login">
       <label for='username'>Usuário</label>
-      <input id='username' v-model='username'>
+      <input id='username' v-model='username' :disabled="!loginAvailable">
 
       <label for='password'>Senha</label>
-      <input id='password' type='password' v-model='password'>
+      <input id='password' type='password' v-model='password' :disabled="!loginAvailable">
 
-      <button type='submit'>Entrar</button>
+      <button type='submit' :disabled="!loginAvailable">Entrar</button>
     </form>
+
     <div v-if='qrcode'>
       <img :src='qrcode' alt='scan me!'>
     </div>
-    <button type='buton' v-if='instance' @click='exit'>Fechar</button>
-    <a v-if='instance' target="_blank" href="/nubank/{{instance}}/data">Ver dados</button>
+
+    <button type='buton' v-if='id' @click='exit'>Fechar</button>
+
+    <a v-if='id' target="_blank" :href="`/nubank/${id}/data`">Ver dados</button>
   </div>
 
   <script>
     new Vue({
       el: '#app',
       data: {
-        username: 'marcelo.mattos',
-        password: 'fake-secret',
-        instance: undefined,
-        qrcode: undefined
+        message: 'Inicializando...',
+        id: undefined,
+        username: undefined,
+        password: undefined,
+        qrcode: undefined,
+        loginAvailable: false,
+        dataAvailable: false
       },
+
       mounted: function () {
-        if (!this.instance) {
+        if (!this.id) {
           this.init()
         }
       },
+
       methods: {
         async init() {
           const { id } = await fetch('/nubank', { method: 'POST' }).then(r => r.json())
-          // TODO: persist this on local storage
-          this.instance = id
+
+          this.id = id
+          this.message = 'Pronto!'
+          this.loginAvailable = true
         },
 
         async login(e) {
           e.preventDefault()
+
+          this.loginAvailable = false
+          this.message = 'Entrando...'
+
           const options = {
             method: 'POST',
             body: JSON.stringify({
               username: this.username,
-              // TODO: hash password before send
               password: this.password
             }),
             headers: {
               'Content-type': 'application/json'
             }
           }
-          const result = await fetch(`/nubank/${this.instance}/login`, options).then(r => r.json())
-          if(result.qrcode) {
-            this.qrcode = result.qrcode
+          const { qrcode } = await fetch(`/nubank/${this.id}/login`, options).then(r => r.json())
+
+          if (qrcode) {
+            this.qrcode = qrcode
+            this.message = 'Sucesso! Valide o QR code no APP e aguarde...'
           } else {
-            console.log('something went wrong')
-            // something went wrong
+            this.loginAvailable = true
+            this.message = 'Não foi possível entrar. :/'
           }
         },
 
         async exit(e) {
-          const result = await fetch(`/nubank/${this.instance}/exit`, { method: 'POST' }).then(r => r.json())
-          console.log(result)
+          await fetch(`/nubank/${this.id}/exit`, { method: 'POST' }).then(r => r.json())
+          window.location.reload()
         },
 
-        async getData(e) {
-          const result = await fetch(`/nubank/${this.instance}/data`).then(r => r.json())
-          console.log(result)
+        async watchData() {
+          const { data } = await fetch(`/nubank/${this.id}/data`).then(r => r.json())
+          if (data) {
+            this.dataAvailable = true
+            this.message = 'Dados disponíveis!'
+          } else {
+            setTimeout(async () => {
+              await this.watchData()
+            }, 2000)
+          }
         }
       }
     })
