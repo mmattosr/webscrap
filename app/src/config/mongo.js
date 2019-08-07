@@ -1,12 +1,14 @@
-import { MongoClient } from 'mongodb'
+import mongoose from 'mongoose'
 
-const url = process.env.MONGO_URL || 'mongodb://mongo:27017'
-
-export default async function mongo() {
-  return await new Promise((resolve, reject) => {
-    MongoClient.connect(url, (error, client) => {
-      if (error) reject(error)
-      else resolve(client)
-    })
-  })
+class Database {
+  constructor() {
+    try {
+      mongoose.connect(process.env.MONGO_URL || 'mongodb://mongo:27017')
+      console.log('Database connected')
+    } catch (e) {
+      console.error('Database connection error', error)
+    }
+  }
 }
+
+export default new Database()

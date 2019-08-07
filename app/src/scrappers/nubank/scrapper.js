@@ -2,9 +2,9 @@ import * as path from 'path'
 import * as os from 'os'
 import uuid from 'uuid/v4'
 import puppeteer from 'puppeteer'
-import scrapBillsPage from './scrappers/scrapBillsPage'
-import scrapTransactionsPage from './scrappers/scrapTransactionsPage'
-import scrapProfilePage from './scrappers/scrapProfilePage'
+import scrapBillsPage from './utils/scrap-bills-page'
+import scrapTransactionsPage from './utils/scrap-transactions-page'
+import scrapProfilePage from './utils/scrap-profiles-page'
 
 // hold scrapper instances
 export const instances = {}

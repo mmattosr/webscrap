@@ -1,9 +1,10 @@
-import MissingParametersError from '../utils/errors/MissingParametersError'
+import MissingParametersError from '../../utils/errors/missing-parameters'
+import NubankScrapper from './scrapper'
 
 export default function routes(app) {
   // POST /nubank
   app.post('/nubank', async (req, res) => {
-    const instance = new NubankScraper()
+    const instance = new NubankScrapper()
     await instance.init()
     res.send({ id: instance.id })
   })
@@ -17,7 +18,7 @@ export default function routes(app) {
         password: req.body.password
       })
     }
-    const scraper = new NubankScraper(req.params.id)
+    const scraper = new NubankScrapper(req.params.id)
     const qrcode = await scraper.login(req.body.username, req.body.password)
     res.send({ qrcode })
   })
@@ -27,7 +28,7 @@ export default function routes(app) {
     if (!req.params.id) {
       throw new MissingParametersError({ id: req.params.id })
     }
-    const scraper = new NubankScraper(req.params.id)
+    const scraper = new NubankScrapper(req.params.id)
     const data = scraper.getData()
     res.send({ data })
   })
@@ -37,7 +38,7 @@ export default function routes(app) {
     if (!req.params.id) {
       throw new MissingParametersError({ id: req.params.id })
     }
-    const scraper = new NubankScraper(req.params.id)
+    const scraper = new NubankScrapper(req.params.id)
     await scraper.exit()
     res.status(200)
     res.end()

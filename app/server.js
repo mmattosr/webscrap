@@ -2,8 +2,8 @@ import 'dotenv/config'
 
 import express from 'express'
 import * as bodyParser from 'body-parser'
-import errorHandler from './src/utils/errorHandlerMiddleware'
-import nubank from './src/nubank/routes'
+import errorHandler from './src/utils/middlewares/error-handler'
+import nubank from './src/scrappers/nubank/routes'
 
 // init app
 const app = express()
