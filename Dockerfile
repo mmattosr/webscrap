@@ -28,6 +28,7 @@ COPY package*.json ./
 RUN npm i
 COPY app/ app/
 COPY .babelrc .
+COPY .env .
 
 # Add user so we don't need --no-sandbox.
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
