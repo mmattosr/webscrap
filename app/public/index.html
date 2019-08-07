@@ -20,7 +20,7 @@
       <img :src='qrcode' alt='scan me!'>
     </div>
     <button type='buton' v-if='instance' @click='exit'>Fechar</button>
-    <button type='buton' v-if='instance' @click='getData'>Exibir dados</button>
+    <a v-if='instance' target="_blank" href="/nubank/{{instance}}/data">Ver dados</button>
   </div>
 
   <script>

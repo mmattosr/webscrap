@@ -29,7 +29,11 @@ export default function routes(app) {
       throw new MissingParametersError({ id: req.params.id })
     }
     const data = await NubankScrapper.getData(req.params.id)
-    res.send({ data })
+    if (dat) {
+      res.send({ data })
+    } else {
+      res.send('There is no data available yet.')
+    }
   })
 
   // POST /nubank/:id/exit
