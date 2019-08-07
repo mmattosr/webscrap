@@ -28,8 +28,7 @@ export default function routes(app) {
     if (!req.params.id) {
       throw new MissingParametersError({ id: req.params.id })
     }
-    const scraper = new NubankScrapper(req.params.id)
-    const data = scraper.getData()
+    const data = await NubankScrapper.getData(req.params.id)
     res.send({ data })
   })
 

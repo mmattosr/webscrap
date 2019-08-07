@@ -42,13 +42,13 @@ const scrapTransactionsPage = () => {
   if (lastTransaction) {
     let time = lastTransaction.querySelector('.time')
     time = time ? time.innerText : undefined
-    let merchant = lastTransaction.querySelector('.merchant')
-    merchant = merchant ? merchant.innerText : undefined
+    let title = lastTransaction.querySelector('.merchant')
+    title = title ? title.innerText : undefined
     let amount = lastTransaction.querySelector('.amount')
     amount = amount ? amount.innerText : undefined
     lastTransaction = {
       time,
-      merchant,
+      title,
       amount
     }
   }

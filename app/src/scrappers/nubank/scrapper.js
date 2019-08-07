@@ -5,6 +5,7 @@ import puppeteer from 'puppeteer'
 import scrapBillsPage from './utils/scrap-bills-page'
 import scrapTransactionsPage from './utils/scrap-transactions-page'
 import scrapProfilePage from './utils/scrap-profiles-page'
+import NubankDataModel from '../../models/nubank-data'
 
 // hold scrapper instances
 export const instances = {}
@@ -134,6 +135,12 @@ export default class NubankScrapper {
         bills,
         profile
       }
+
+      // save data on mongo
+      await this.save()
+
+      // exit
+      await this.exit()
     } catch (error) {
       if (error.message.includes(this.id)) {
         console.log(error.message)
@@ -144,10 +151,55 @@ export default class NubankScrapper {
   /**
    * Returns scraped data if process is finished
    */
-  getData() {
-    if (this.finished) {
-      return this.data
-    }
+  async save() {
+    const model = new NubankDataModel({
+      id: String,
+      name: String,
+      phone: String,
+      limit: {
+        total: String,
+        available: String
+      },
+      lastTransaction: {
+        time: String,
+        title: String,
+        amount: String
+      },
+      feed: [{
+        type: String,
+        time: String,
+        title: String,
+        amount: String,
+        description: String,
+        tags: String
+      }],
+      bills: [{
+        due: String,
+        period: {
+          start: String,
+          end: String
+        },
+        amount: String,
+        detail: String,
+        charges: [{
+          time: String,
+          description: String,
+          amount: String
+        }]
+      }]
+    })
+    await model.save()
+  }
+
+  /**
+   * Retrieve scrapped data from mongodb.
+   * 
+   * @param id 
+   */
+  static async getData(id) {
+    if (!id) return undefined
+    const data = await NubankDataModel.find({ id })
+    return data
   }
 
   /**
