@@ -1,3 +1,5 @@
+import 'dotenv/config'
+
 import express from 'express'
 import * as bodyParser from 'body-parser'
 import errorHandler from './src/utils/errorHandlerMiddleware'
@@ -9,7 +11,7 @@ const app = express()
 // set up body parser
 app.use(bodyParser.json())
 
-// set up nubank routes
+// set up nubank scraper routes
 nubank(app)
 
 // set up static files
@@ -19,4 +21,5 @@ app.use('*', express.static(`${__dirname}/public`))
 app.use(errorHandler)
 
 // run app
-app.listen(8080, () => console.log('App started on http://localhost:8080'))
+const port = process.env.PORT || 8080
+app.listen(port, () => console.log(`App started on http://localhost:${port}`))

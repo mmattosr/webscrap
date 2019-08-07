@@ -7,7 +7,9 @@
     "start": "babel-node app/server.js",
     "dev": "nodemon --exec npm start",
     "docker:build": "docker build -t webscrap .",
-    "docker:run": "docker run -it -p 8080:8080 webscrap"
+    "docker:run": "docker run -it -p 8080:8080 webscrap",
+    "compose:up": "docker-compose up",
+    "compose:stop": "docker-compose stop"
   },
   "author": "",
   "license": "ISC",
@@ -20,8 +22,10 @@
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.5.5",
     "body-parser": "^1.19.0",
+    "dotenv": "^8.0.0",
     "express": "^4.17.1",
     "moment": "^2.24.0",
+    "mongodb": "^3.3.0-beta2",
     "puppeteer": "^1.19.0",
     "uuid": "^3.3.2"
   }
