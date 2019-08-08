@@ -16,47 +16,46 @@
  */
 const scrapTransactionsPage = () => {
   // scrap available limit data
-  let availableLimit = document.querySelector('.available .amount')
-  availableLimit = availableLimit ? availableLimit.innerText : undefined
+  const availableLimit = document.querySelector('.available .amount')
 
   // scrap feed data
-  const feed = [...document.querySelectorAll('.transaction')].map(item => {
+  const feed = []
+  document.querySelectorAll('.transaction').forEach(item => {
     const type = item.querySelector('.type')
     const title = item.querySelector('.title')
     const description = item.querySelector('.description')
     const amount = item.querySelector('.amount')
     const tags = item.querySelector('.tags')
     const time = item.querySelector('.time')
-    return {
-      type: type && type.innerText,
+    feed.push({
+      // use kind insead of type, since type is a mongoose reservated word 
+      // see: https://github.com/Automattic/mongoose/issues/1760
+      kind: type && type.innerText,
       title: title && title.innerText,
       description: description && description.innerText,
       amount: amount && amount.innerText,
       tags: tags && tags.innerText,
       time: time && time.innerText
-    }
+    })
   })
 
   // scrap last transaction data
   let lastTransaction = document.querySelector('.last-transaction')
   if (lastTransaction) {
-    let time = lastTransaction.querySelector('.time')
-    time = time ? time.innerText : undefined
-    let title = lastTransaction.querySelector('.merchant')
-    title = title ? title.innerText : undefined
-    let amount = lastTransaction.querySelector('.amount')
-    amount = amount ? amount.innerText : undefined
+    const time = lastTransaction.querySelector('.time')
+    const title = lastTransaction.querySelector('.merchant')
+    const amount = lastTransaction.querySelector('.amount')
     lastTransaction = {
-      time,
-      title,
-      amount
+      time: time ? time.innerText : undefined,
+      title: title ? title.innerText : undefined,
+      amount: amount ? amount.innerText : undefined
     }
   }
 
   return {
-    limitAvailable: availableLimit,
-    lastTransaction,
-    feed
+    limitAvailable: availableLimit ? availableLimit.innerText : undefined,
+    lastTransaction: lastTransaction,
+    feed: feed
   }
 }
 

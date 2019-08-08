@@ -7,15 +7,12 @@
  */
 const scrapProfilePage = () => {
   const email = document.querySelector('#email')
-  email = email ? email.value : undefined
   const phone = document.querySelector('#phone')
-  phone = phone ? phone.value : undefined
   const totalLimit = document.querySelector('.card-summary .value')
-  totalLimit = totalLimit ? totalLimit.innerText : undefined
   return {
-    email,
-    phone,
-    totalLimit
+    email: email ? email.value : undefined,
+    phone: phone ? phone.value : undefined,
+    totalLimit: totalLimit ? totalLimit.innerText : undefined
   }
 }
 
