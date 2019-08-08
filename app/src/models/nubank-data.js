@@ -14,7 +14,7 @@ const schema = new mongoose.Schema({
     amount: String
   },
   feed: [{
-    type: String,
+    kind: String,
     time: String,
     title: String,
     amount: String,
