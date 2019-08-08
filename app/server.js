@@ -1,5 +1,6 @@
 import 'dotenv/config'
 
+import './src/config/mongo'
 import express from 'express'
 import * as bodyParser from 'body-parser'
 import errorHandler from './src/utils/middlewares/error-handler'
