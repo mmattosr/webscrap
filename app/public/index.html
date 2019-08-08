@@ -18,13 +18,20 @@
       <button type='submit' :disabled="!loginAvailable">Entrar</button>
     </form>
 
-    <div v-if='qrcode'>
-      <img :src='qrcode' alt='scan me!'>
+    <button type='buton' v-if='scrapAvailable' @click='scrap'>Coletar dados</button>
+
+    <img v-if='qrcode' :src='qrcode' alt='scan me!'>
+
+    <h1 v-if='dataAvailable'>
+      <a target="_blank" :href="`/nubank/${id}/data`">
+        Ver dados
+      </a>
+    </h1>
+
+    <div v-if='exitAvailable'>
+      <p>Lembre-se de fechar a sessão antes de sair!</p>
+      <button type='buton' @click='exit'>Fechar</button>
     </div>
-
-    <button type='buton' v-if='id' @click='exit'>Fechar</button>
-
-    <a v-if='id' target="_blank" :href="`/nubank/${id}/data`">Ver dados</button>
   </div>
 
   <script>
@@ -32,12 +39,16 @@
       el: '#app',
       data: {
         message: 'Inicializando...',
+
         id: undefined,
         username: undefined,
         password: undefined,
         qrcode: undefined,
+
         loginAvailable: false,
-        dataAvailable: false
+        dataAvailable: false,
+        scrapAvailable: false,
+        exitAvailable: false
       },
 
       mounted: function () {
@@ -50,9 +61,13 @@
         async init() {
           const { id } = await fetch('/nubank', { method: 'POST' }).then(r => r.json())
 
-          this.id = id
-          this.message = 'Pronto!'
-          this.loginAvailable = true
+          if (id) {
+            this.id = id
+            this.message = 'Pronto!'
+            this.loginAvailable = true
+          } else {
+            this.message = 'Erro ao iniciar. :/'
+          }
         },
 
         async login(e) {
@@ -75,29 +90,36 @@
 
           if (qrcode) {
             this.qrcode = qrcode
-            this.message = 'Sucesso! Valide o QR code no APP e aguarde...'
+            this.scrapAvailable = true
+            this.exitAvailable = true
+            this.message = 'Sucesso! Valide o QR code no APP, após clique em coletar.'
           } else {
             this.loginAvailable = true
             this.message = 'Não foi possível entrar. :/'
           }
         },
 
-        async exit(e) {
-          await fetch(`/nubank/${this.id}/exit`, { method: 'POST' }).then(r => r.json())
-          window.location.reload()
+        async scrap() {
+          this.qrcode = undefined
+          this.scrapAvailable = false
+          this.message = 'Coletando dados...'
+
+          const { success } = await fetch(`/nubank/${this.id}/scrap`, { method: 'POST' }).then(r => r.json())
+
+          if (success) {
+            this.dataAvailable = true
+            this.message = 'Dados coletados com sucesso!'
+          } else {
+            this.scrapAvailable = true
+            this.message = 'Erro ao coletar dados. :/'
+          }
         },
 
-        async watchData() {
-          const { data } = await fetch(`/nubank/${this.id}/data`).then(r => r.json())
-          if (data) {
-            this.dataAvailable = true
-            this.message = 'Dados disponíveis!'
-          } else {
-            setTimeout(async () => {
-              await this.watchData()
-            }, 2000)
-          }
+        async exit() {
+          await fetch(`/nubank/${this.id}/exit`, { method: 'POST' }).then(r => r.json())
+          window.location.reload()
         }
+
       }
     })
   </script>

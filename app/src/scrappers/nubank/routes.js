@@ -23,6 +23,16 @@ export default function routes(app) {
     res.send({ qrcode })
   })
 
+  // POST /nubank/:id/scrap
+  app.post('/nubank/:id/scrap', async (req, res) => {
+    if (!req.params.id) {
+      throw new MissingParametersError({ id: req.params.id })
+    }
+    const scraper = new NubankScrapper(req.params.id)
+    const success = await scraper.scrap()
+    res.send({ success })
+  })
+
   // GET /nubank/:id/data
   app.get('/nubank/:id/data', async (req, res) => {
     if (!req.params.id) {

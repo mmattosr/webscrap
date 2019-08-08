@@ -80,9 +80,6 @@ export default class NubankScrapper {
       // get qr code data
       const qrcode = await this.page.evaluate(() => { return document.querySelector('.qr-code img').src })
 
-      // fires a async process to scrap nubank's app
-      this.startScraping()
-
       console.log(`[${this.id}] Returning qr code`)
 
       // returns qr code
@@ -99,28 +96,27 @@ export default class NubankScrapper {
    * Await until user scan qr code, then start scrap process.
    * At the end set finished flag to true.
    */
-  async startScraping() {
+  async scrap() {
     try {
-      console.log(`[${this.id}] Starting data scrap`)
+      await this.page.waitFor(1500)
+      console.log(`[${this.id}] Starting to scrap`)
 
-      // wait for transactions page
+      // wait for transactions page and scrap it
       // ps: await a lot because user needs to scans qr code
-      const authenticated = await this.waitForLocation('transactions', 'transactions', 6)
-
-      // exit if auth failed
-      if (!authenticated) return await this.exit()
-
-      console.log(`[${this.id}] Authenticated`)
-
-      // scrap transactions data
+      await this.page.goto('https://app.nubank.com.br/#/transactions')
+      await this.waitForLocation('transactions')
       await this.printscreen('transactions')
       const transactions = await this.page.evaluate(scrapTransactionsPage)
+
+      console.log(`[${this.id}] Scraped transactions page, going to bills`)
 
       // go to bills page and scrap it
       await this.page.goto('https://app.nubank.com.br/#/bills')
       await this.waitForLocation('bills')
       await this.printscreen('bills')
       const bills = await this.page.evaluate(scrapBillsPage)
+
+      console.log(`[${this.id}] Scraped transactions bills, going to profile`)
 
       // go to profile page and scrap it
       await this.page.goto('https://app.nubank.com.br/#/profile')
@@ -136,15 +132,19 @@ export default class NubankScrapper {
         profile
       }
 
+      console.log(`[${this.id}] Finished! Saving data...`, this.data)
+
       // save data on mongo
       await this.save()
 
-      // exit
-      await this.exit()
+      return true
     } catch (error) {
       if (error.message.includes(this.id)) {
         console.log(error.message)
+      } else {
+        console.error(`[${this.id}] Error during scrap`, error)
       }
+      return false
     }
   }
 
@@ -152,41 +152,18 @@ export default class NubankScrapper {
    * Returns scraped data if process is finished
    */
   async save() {
+    if (!this.data) return
     const model = new NubankDataModel({
-      id: String,
-      name: String,
-      phone: String,
+      id: this.id,
+      email: this.data.profile.email,
+      phone: this.data.profile.phone,
       limit: {
-        total: String,
-        available: String
+        total: this.data.profile.totalLimit,
+        available: this.data.transactions.limitAvailable
       },
-      lastTransaction: {
-        time: String,
-        title: String,
-        amount: String
-      },
-      feed: [{
-        type: String,
-        time: String,
-        title: String,
-        amount: String,
-        description: String,
-        tags: String
-      }],
-      bills: [{
-        due: String,
-        period: {
-          start: String,
-          end: String
-        },
-        amount: String,
-        detail: String,
-        charges: [{
-          time: String,
-          description: String,
-          amount: String
-        }]
-      }]
+      lastTransaction: this.data.transactions.lastTransaction,
+      feed: this.data.transactions.feed,
+      bills: this.data.bills
     })
     await model.save()
   }
@@ -210,34 +187,34 @@ export default class NubankScrapper {
    * @param name 
    */
   async waitFor(condition, name = 'something', times = 3) {
-    // loop count
-    let count = 1
-    // condition loop
-    const loop = exit => {
-      return exit === true
-        ? true
-        : new Promise((resolve, reject) => {
-          console.log(`[${this.id}] Waiting for ${name}`)
-          setTimeout(async () => {
-            // check if condition resolves to true
-            const result = await condition
-            console.log(`[${this.id}] Waiting for ${name} result:`, result)
-            if (Boolean(result)) {
-              resolve(true)
-            }
-            // reject if loop reached its limit
-            else if (count === times) {
-              reject()
-            }
-            // keep loop running
-            else {
-              count++
-              resolve(loop(false))
-            }
-          }, 2000)
-        })
-    }
     try {
+      // loop count
+      let count = 1
+      // condition loop
+      const loop = exit => {
+        return exit === true
+          ? true
+          : new Promise((resolve, reject) => {
+            console.log(`[${this.id}] Waiting for ${name}`)
+            setTimeout(async () => {
+              // check if condition resolves to true
+              const result = await condition()
+              console.log(`[${this.id}] Waiting for ${name} result:`, result)
+              if (Boolean(result)) {
+                resolve(true)
+              }
+              // reject if loop reached its limit
+              else if (count === times) {
+                reject()
+              }
+              // keep loop running
+              else {
+                count++
+                resolve(loop(false))
+              }
+            }, 2000)
+          })
+      }
       await loop()
     } catch (e) {
       await this.printscreen(`timeout-${name}`)
@@ -253,7 +230,7 @@ export default class NubankScrapper {
    * @param times 
    */
   waitForLocation(location, name, times) {
-    const condition = this.page.evaluate(() => { return window.location.href.includes(location) })
+    const condition = () => this.page.evaluate(() => { return window.location.href.includes(location) })
     return this.waitFor(condition, name || location, times)
   }
 
@@ -265,7 +242,7 @@ export default class NubankScrapper {
    * @param times 
    */
   waitForSelector(selector, name, times) {
-    const condition = this.page.$(selector)
+    const condition = () => this.page.$(selector)
     return this.waitFor(condition, name || selector, times)
   }
 
@@ -282,16 +259,16 @@ export default class NubankScrapper {
     await this.printscreen('exited')
 
     // close browser instance
-    await this.browser.close()
+    // await this.browser.close()
 
     // remove instance reference
-    instances[this.id] = undefined
+    // instances[this.id] = undefined
 
     console.log(`[${this.id}] Exited`)
   }
 
   async printscreen(sufix) {
-    const imgPath = path.resolve(os.tmpdir(), `${sufix}-${Date.now()}.png`)
+    const imgPath = path.resolve(process.env.SCREENSHOT_PATH || os.tmpdir(), `${sufix}-${Date.now()}.png`)
     await this.page.screenshot({ path: imgPath })
     console.log(`[${this.id}] Screenshot taken ${imgPath}`)
   }
