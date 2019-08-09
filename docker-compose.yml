@@ -5,8 +5,9 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - mongo
+      - mongo 
+    environment:
+      - PORT=8080
+      - MONGO_URL=mongodb://mongo:27017/webscrap
   mongo:
     image: mongo
-    ports:
-      - "27017:27017"
