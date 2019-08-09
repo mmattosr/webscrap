@@ -18,7 +18,7 @@
       <button type='submit' :disabled="!loginAvailable">Entrar</button>
     </form>
 
-    <button type='buton' v-if='scrapAvailable' @click='scrap'>Coletar dados</button>
+    <button type='buton' v-if='scrapAvailable' @click='scrap'>Coletar</button>
 
     <img v-if='qrcode' :src='qrcode' alt='scan me!'>
 
@@ -29,8 +29,8 @@
     </h1>
 
     <div v-if='exitAvailable'>
-      <p>Lembre-se de fechar a sessão antes de sair!</p>
-      <button type='buton' @click='exit'>Fechar</button>
+      <p>Lembre-se de sair no final da coleta!</p>
+      <button type='buton' @click='exit'>Sair</button>
     </div>
   </div>
 
