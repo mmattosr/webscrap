@@ -13,8 +13,10 @@
  *  - amout
  *  - tags
  *  - time
+ * 
+ * Obs.: To prevent transpiler issues all scrap functions, those that runs inside puppeteer's browser, should be a string.
  */
-const scrapTransactionsPage = () => {
+const scrapTransactionsPage = `() => {
   // scrap available limit data
   const availableLimit = document.querySelector('.available .amount')
 
@@ -57,6 +59,6 @@ const scrapTransactionsPage = () => {
     lastTransaction: lastTransaction,
     feed: feed
   }
-}
+}`
 
 export default scrapTransactionsPage

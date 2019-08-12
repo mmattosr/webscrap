@@ -26,15 +26,15 @@ A aplicação salva todos os dados coletados no mongoDB que roda em paraelo. Um 
 Para realizar a coleta de dados é necessário seguir alguns passos.
 1. **Aguarde a inicialização**: assim que a página é carregada a app inicia, no servidor, uma instancia do Puppeteer.
 
-2. **Faça o login**: digite o seu usuário e senha e clique em entrar e aguarde pela geração do qrcode.
+2. **Faça o login**: digite o seu usuário e senha, clique em `Entrar` e aguarde pela geração do qrcode.
 
 3. **Autorize o qrcode**: acesse o seu aplicativo do Nubank, depois clique no seu nome, vá em Perfil > Acesso pelo site e escaneie o qrcode.
 
-4. **Colete os dados**: aguarde um segundo ou dois após a autorização o qrcode e clique no botão 'Coletar'
+4. **Colete os dados**: aguarde um segundo ou dois após a autorização o qrcode e clique no botão `Coletar`
 
-5. **Acesse os dados**: após alguns segundos, se tudo der certo, os dados coletadoes estarão disponível no link 'Ver dados' (estas infos também podem ser acessads no banco de dados usando o id que está no link).
+5. **Acesse os dados**: após alguns segundos, se tudo der certo, os dados coletadoes estarão disponível no link `Ver dados` (estas infos também podem ser acessads no banco de dados usando o id que está no link).
 
-6. **Clique em sair**: para não deixar nenhuma sessão aberta no Nubank o ideal é que seja feito o logout (clicando no botão 'Sair') no final da coleta, ou quando desejado.
+6. **Clique em sair**: para não deixar nenhuma sessão aberta no Nubank o ideal é que seja feito o logout (clicando no botão `Sair`) no final da coleta, ou quando desejado.
 
 
 ## Stack
