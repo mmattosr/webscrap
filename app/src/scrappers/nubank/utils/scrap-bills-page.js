@@ -13,7 +13,7 @@
  * 
  * Obs.: To prevent transpiler issues all scrap functions, those that runs inside puppeteer's browser, should be a string.
  */
-const scrapBillsPage = `async () => {
+const scrapBillsPage = `(async () => {
   const result = []
   const bills = document.querySelectorAll('.md-tab-content')
   for (let i = 0; i < bills.length; i++) {
@@ -66,6 +66,6 @@ const scrapBillsPage = `async () => {
     })
   }
   return result
-}`
+})()`
 
 export default scrapBillsPage
