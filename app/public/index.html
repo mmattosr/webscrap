@@ -20,7 +20,10 @@
 
     <button type='buton' v-if='scrapAvailable' @click='scrap'>Coletar</button>
 
-    <img v-if='qrcode' :src='qrcode' alt='scan me!'>
+    <div v-if='qrcode'>
+      <br>
+      <img :src='qrcode' alt='scan me!'>
+    </div>
 
     <h1 v-if='dataAvailable'>
       <a target="_blank" :href="`/nubank/${id}/data`">

@@ -10,10 +10,31 @@
  *    - time
  *    - description
  *    - amount
+ * 
+ * Obs.: To prevent transpiler issues all scrap functions, those that runs inside puppeteer's browser, should be a string.
  */
-const scrapBillsPage = () => {
-  const bills = []
-  document.querySelectorAll('.md-tab-content').forEach(bill => {
+const scrapBillsPage = `(async () => {
+  const result = []
+  const bills = document.querySelectorAll('.md-tab-content')
+  for (let i = 0; i < bills.length; i++) {
+    const bill = bills[i];
+
+    // get bill id
+    if (!bill.id) return resolve()
+    const id = bill.id.replace('content_', '')
+    if (!id) return resolve()
+
+    // get tab
+    const tab = document.querySelector('#' + id)
+    if (!tab) return resolve()
+
+    // click on tab to load it's content
+    tab.click()
+
+    // sleep for 500ms to wait page load
+    await (new Promise(r => setTimeout(r, 300)))
+
+    // scrap bill content
     const period = bill.querySelectorAll('.charges .period span')
     const start = period[0]
     const end = period[1]
@@ -31,7 +52,9 @@ const scrapBillsPage = () => {
         amount: amount ? amount.innerText : undefined
       })
     })
-    bills.push({
+
+    // returns scrapped bill's content
+    result.push({
       period: {
         start: start ? start.innerText : undefined,
         end: end ? end.innerText : undefined
@@ -41,8 +64,8 @@ const scrapBillsPage = () => {
       detail: detail ? detail.innerText : undefined,
       charges: charges
     })
-  })
-  return bills
-}
+  }
+  return result
+})()`
 
 export default scrapBillsPage
